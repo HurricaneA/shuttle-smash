@@ -22,6 +22,7 @@ export function readState(raw: unknown): TournamentState {
   return {
     seededTeamIds: Array.isArray(s.seededTeamIds) ? s.seededTeamIds : [],
     results: s.results && typeof s.results === 'object' ? s.results : {},
+    scores: s.scores && typeof s.scores === 'object' ? s.scores : {},
     thirdPlace: typeof s.thirdPlace === 'boolean' ? s.thirdPlace : true,
   };
 }

@@ -31,6 +31,19 @@ export default function BracketEditor({
     }
   };
 
+  const score = async (matchId: string, scoreA: number, scoreB: number) => {
+    if (busyMatchId) return;
+    setBusyMatchId(matchId);
+    setError(null);
+    try {
+      onChange(await api.setScore(matchId, scoreA, scoreB));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save score.');
+    } finally {
+      setBusyMatchId(null);
+    }
+  };
+
   const resetResults = async () => {
     if (!window.confirm('Clear all match results? Teams and seeding are kept.')) return;
     try {
@@ -44,14 +57,15 @@ export default function BracketEditor({
     <div className="card">
       <h2 className="text-xl font-bold text-brand-navy">Update Results</h2>
       <p className="mt-1 text-sm text-brand-ink/60">
-        Tap the winning team in each match — they advance automatically. Tap a winner again to
-        undo. Fixing an earlier round clears any now-invalid later matches.
+        Enter each match score and hit <strong>Save</strong> — the higher score wins and advances.
+        Or tap a team to set the winner without a score (walkover). Tap a winner again to undo;
+        fixing an earlier round clears any now-invalid later matches.
       </p>
 
       {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
 
       <div className="mt-5">
-        <BracketView bracket={bracket} editable busyMatchId={busyMatchId} onPick={pick} />
+        <BracketView bracket={bracket} editable busyMatchId={busyMatchId} onPick={pick} onScore={score} />
       </div>
 
       <div className="mt-8 border-t border-slate-200 pt-4">

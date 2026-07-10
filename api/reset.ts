@@ -25,8 +25,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await prisma.team.deleteMany({});
       await saveState(emptyState(state.thirdPlace));
     } else {
-      // Keep the roster + seed order; wipe only the recorded results.
-      await saveState({ ...state, results: {} });
+      // Keep the roster + seed order; wipe only the recorded results + scores.
+      await saveState({ ...state, results: {}, scores: {} });
     }
 
     json(res, 200, { bracket: await getBracket() });

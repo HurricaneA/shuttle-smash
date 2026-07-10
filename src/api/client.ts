@@ -67,6 +67,12 @@ export const api = {
       body: JSON.stringify({ matchId, winnerId }),
     }).then((r) => r.bracket),
 
+  setScore: (matchId: string, scoreA: number, scoreB: number) =>
+    request<{ bracket: Bracket }>('result', {
+      method: 'PATCH',
+      body: JSON.stringify({ matchId, scoreA, scoreB }),
+    }).then((r) => r.bracket),
+
   clearResult: (matchId: string) =>
     request<{ bracket: Bracket }>('result', {
       method: 'PATCH',

@@ -91,6 +91,8 @@ export function generateSkeleton(seededTeamIds: string[], thirdPlace: boolean): 
         a: null,
         b: null,
         winner: null,
+        scoreA: null,
+        scoreB: null,
         next: feederOf(r, pos),
         nextLoser: enable3P && r === semiRound ? { matchId: 'third', slot: slotOf(pos) } : null,
       });
@@ -112,6 +114,8 @@ export function generateSkeleton(seededTeamIds: string[], thirdPlace: boolean): 
         a: t1,
         b: t2,
         winner: null,
+        scoreA: null,
+        scoreB: null,
         next: dest,
         nextLoser: enable3P && semiRound === 0 ? { matchId: 'third', slot: slotOf(pos) } : null,
       });
@@ -131,6 +135,8 @@ export function generateSkeleton(seededTeamIds: string[], thirdPlace: boolean): 
       a: null,
       b: null,
       winner: null,
+      scoreA: null,
+      scoreB: null,
       next: null,
       nextLoser: null,
     });
@@ -147,6 +153,7 @@ export function generateSkeleton(seededTeamIds: string[], thirdPlace: boolean): 
 export function deriveBracket(
   seededTeamIds: string[],
   results: Record<string, string>,
+  scores: Record<string, { a: number; b: number }>,
   thirdPlace: boolean,
 ): Match[] {
   const matches = generateSkeleton(seededTeamIds, thirdPlace);
@@ -155,8 +162,13 @@ export function deriveBracket(
   // Apply earliest rounds first so every feeder is resolved before its target.
   for (const m of [...matches].sort((x, y) => x.round - y.round)) {
     const w = results[m.id];
-    if (!w || (m.a !== w && m.b !== w)) continue; // no/invalid result -> leave TBD
+    if (!w || (m.a !== w && m.b !== w)) continue; // no/invalid result -> leave TBD (scores dropped too)
     m.winner = w;
+    const s = scores[m.id];
+    if (s) {
+      m.scoreA = s.a;
+      m.scoreB = s.b;
+    }
     const loser = m.a === w ? m.b : m.a;
     if (m.next) byId[m.next.matchId][m.next.slot] = w;
     if (m.nextLoser && loser) byId[m.nextLoser.matchId][m.nextLoser.slot] = loser;
@@ -166,7 +178,7 @@ export function deriveBracket(
 
 /** Assemble the full public bracket response from teams + persisted state. */
 export function buildBracket(teams: Team[], state: TournamentState, name: string): Bracket {
-  const matches = deriveBracket(state.seededTeamIds, state.results, state.thirdPlace);
+  const matches = deriveBracket(state.seededTeamIds, state.results, state.scores ?? {}, state.thirdPlace);
   const n = state.seededTeamIds.length;
   const seeded = n >= MIN_TEAMS;
 
@@ -199,5 +211,5 @@ export function buildBracket(teams: Team[], state: TournamentState, name: string
 
 /** Default state for a brand-new / reset tournament. */
 export function emptyState(thirdPlace = true): TournamentState {
-  return { seededTeamIds: [], results: {}, thirdPlace };
+  return { seededTeamIds: [], results: {}, scores: {}, thirdPlace };
 }

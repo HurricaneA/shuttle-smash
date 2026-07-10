@@ -6,9 +6,10 @@ interface Props {
   editable?: boolean;
   busyMatchId?: string | null;
   onPick?: (matchId: string, teamId: string) => void;
+  onScore?: (matchId: string, scoreA: number, scoreB: number) => void;
 }
 
-export default function BracketView({ bracket, editable, busyMatchId, onPick }: Props) {
+export default function BracketView({ bracket, editable, busyMatchId, onPick, onScore }: Props) {
   const teams: Record<string, Team | undefined> = Object.fromEntries(
     bracket.teams.map((t) => [t.id, t]),
   );
@@ -31,6 +32,7 @@ export default function BracketView({ bracket, editable, busyMatchId, onPick }: 
                     editable={editable}
                     busy={busyMatchId === m.id}
                     onPick={onPick}
+                    onScore={onScore}
                   />
                 ))}
               </div>
@@ -53,6 +55,7 @@ export default function BracketView({ bracket, editable, busyMatchId, onPick }: 
             editable={editable}
             busy={busyMatchId === bracket.thirdPlaceMatch.id}
             onPick={onPick}
+            onScore={onScore}
           />
         </div>
       )}

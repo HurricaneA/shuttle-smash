@@ -70,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Drop any teams that are no longer part of the roster.
       await tx.team.deleteMany({ where: { id: { notIn: orderedIds } } });
 
-      const state = { seededTeamIds: orderedIds, results: {}, thirdPlace: keepThirdPlace };
+      const state = { seededTeamIds: orderedIds, results: {}, scores: {}, thirdPlace: keepThirdPlace };
       await tx.tournament.upsert({
         where: { id: 'main' },
         update: { state: state as unknown as object },

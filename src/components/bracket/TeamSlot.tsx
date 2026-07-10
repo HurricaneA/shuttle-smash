@@ -4,6 +4,7 @@ interface Props {
   team: Team | null;
   isWinner: boolean;
   seed?: number | null;
+  score?: number | null;
   editable?: boolean;
   disabled?: boolean;
   onClick?: () => void;
@@ -17,7 +18,7 @@ function CheckIcon() {
   );
 }
 
-export default function TeamSlot({ team, isWinner, seed, editable, disabled, onClick }: Props) {
+export default function TeamSlot({ team, isWinner, seed, score, editable, disabled, onClick }: Props) {
   const base =
     'flex w-full items-center gap-2 px-3 py-2 text-left transition-colors';
   const tone = team
@@ -45,6 +46,15 @@ export default function TeamSlot({ team, isWinner, seed, editable, disabled, onC
       {isWinner && (
         <span className="shrink-0 text-brand-orange" title="Winner">
           <CheckIcon />
+        </span>
+      )}
+      {score != null && (
+        <span
+          className={`shrink-0 tabular-nums font-display text-base ${
+            isWinner ? 'font-extrabold text-brand-navy' : 'font-semibold text-brand-ink/60'
+          }`}
+        >
+          {score}
         </span>
       )}
     </>

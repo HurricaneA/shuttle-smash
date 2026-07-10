@@ -25,7 +25,13 @@ model Team {
 model Tournament {
   id        String   @id @default("main")
   name      String   @default("Shuttle Smash Championship 2026")
-  // state = { seededTeamIds: string[]; results: Record<matchId, winnerTeamId>; thirdPlace: boolean }
-  state     Json     @default("{\"seededTeamIds\":[],\"results\":{},\"thirdPlace\":true}")
+  // The whole bracket lives in this JSON column (the tree is derived on read):
+  // state = {
+  //   seededTeamIds: string[];                         // seed order
+  //   results: Record<matchId, winnerTeamId>;          // who advanced
+  //   scores:  Record<matchId, { a: number, b: number }>; // per-match score
+  //   thirdPlace: boolean;
+  // }
+  state     Json     @default("{\"seededTeamIds\":[],\"results\":{},\"scores\":{},\"thirdPlace\":true}")
   updatedAt DateTime @updatedAt
 }

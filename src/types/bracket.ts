@@ -30,6 +30,8 @@ export interface Match {
   a: string | null; // teamId, or null = TBD / awaiting a feeder / bye
   b: string | null;
   winner: string | null; // teamId (echoed from stored results)
+  scoreA: number | null; // recorded score for slot a (null = not recorded)
+  scoreB: number | null; // recorded score for slot b
   next: Feeder | null; // where the winner advances
   nextLoser: Feeder | null; // where the loser goes (semifinal -> 3rd-place only)
 }
@@ -38,6 +40,7 @@ export interface Match {
 export interface TournamentState {
   seededTeamIds: string[]; // length N once seeded; index 0 = seed #1
   results: Record<string, string>; // matchId -> winning teamId
+  scores: Record<string, { a: number; b: number }>; // matchId -> slot a/b scores
   thirdPlace: boolean;
 }
 
