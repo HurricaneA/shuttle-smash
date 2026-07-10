@@ -1,0 +1,31 @@
+// Shuttle Smash Championship 2026 — data model
+// One fixed Tournament row ("main") holds the minimal bracket state as JSON.
+// Teams stay normalized so names/seeds are editable and referenced by stable IDs.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  player1   String
+  player2   String
+  seed      Int? // 1..10 once seeded; null before
+  createdAt DateTime @default(now())
+
+  @@index([seed])
+}
+
+model Tournament {
+  id        String   @id @default("main")
+  name      String   @default("Shuttle Smash Championship 2026")
+  // state = { seededTeamIds: string[]; results: Record<matchId, winnerTeamId>; thirdPlace: boolean }
+  state     Json     @default("{\"seededTeamIds\":[],\"results\":{},\"thirdPlace\":true}")
+  updatedAt DateTime @updatedAt
+}

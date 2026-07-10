@@ -1,0 +1,25 @@
+# dependencies
+node_modules
+
+# build output
+dist
+
+# secrets — never commit
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# prisma local db files
+/prisma/*.db
+/prisma/*.db-journal
+
+# impeccable (AI design skill — installed locally via npx, not part of the app)
+.impeccable/
+.claude/skills/impeccable/
+.claude/settings.local.json
+
+# misc
+.DS_Store
+*.log
