@@ -1,8 +1,8 @@
 // GET /api/bracket — public. Returns the current derived bracket.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { allowMethods, json } from './_lib/http';
-import { getBracket } from './_lib/store';
+import { allowMethods, json } from './_lib/http.js';
+import { getBracket } from './_lib/store.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!allowMethods(req, res, ['GET'])) return;

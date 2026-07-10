@@ -7,11 +7,11 @@
 // identity); teams no longer in the roster are removed. Results are reset.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { allowMethods, body, json } from './_lib/http';
-import { requireAdmin } from './_lib/auth';
-import { prisma } from './_lib/prisma';
-import { getBracket, readState } from './_lib/store';
-import { MAX_TEAMS, MIN_TEAMS } from '../src/types/bracket';
+import { allowMethods, body, json } from './_lib/http.js';
+import { requireAdmin } from './_lib/auth.js';
+import { prisma } from './_lib/prisma.js';
+import { getBracket, readState } from './_lib/store.js';
+import { MAX_TEAMS, MIN_TEAMS } from './_lib/bracket.js';
 
 interface TeamInput {
   id?: string;

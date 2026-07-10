@@ -10,7 +10,18 @@
 // of two real teams become actual first-round ("Play-in") matches.
 
 import type { Bracket, BracketRound, Match, SlotKey, Team, TournamentState } from '../../src/types/bracket';
-import { MIN_TEAMS, bracketSizeFor } from '../../src/types/bracket';
+
+// Self-contained constants. Vercel bundles each function individually and cannot pull
+// runtime values across the src/ boundary, so these live here (types above are erased
+// at runtime, so type-only imports are fine). Keep in sync with src/types/bracket.ts.
+export const MIN_TEAMS = 2;
+export const MAX_TEAMS = 32;
+
+function bracketSizeFor(n: number): number {
+  let p = 2;
+  while (p < n) p *= 2;
+  return p;
+}
 
 /**
  * Standard bracket seed order for a bracket of `size` slots (a power of two).

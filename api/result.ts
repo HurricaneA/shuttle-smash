@@ -7,10 +7,10 @@
 // never be pushed into an inconsistent shape.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { allowMethods, body, json } from './_lib/http';
-import { requireAdmin } from './_lib/auth';
-import { deriveBracket } from './_lib/bracket';
-import { getBracket, getTournamentRow, readState, saveState } from './_lib/store';
+import { allowMethods, body, json } from './_lib/http.js';
+import { requireAdmin } from './_lib/auth.js';
+import { deriveBracket } from './_lib/bracket.js';
+import { getBracket, getTournamentRow, readState, saveState } from './_lib/store.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!allowMethods(req, res, ['PATCH', 'POST'])) return;

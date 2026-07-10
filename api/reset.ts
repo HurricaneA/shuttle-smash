@@ -2,11 +2,11 @@
 // Body: { clearTeams?: boolean } — if true, also removes all teams and unseeds.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { allowMethods, body, json } from './_lib/http';
-import { requireAdmin } from './_lib/auth';
-import { prisma } from './_lib/prisma';
-import { getBracket, getTournamentRow, readState, saveState } from './_lib/store';
-import { emptyState } from './_lib/bracket';
+import { allowMethods, body, json } from './_lib/http.js';
+import { requireAdmin } from './_lib/auth.js';
+import { prisma } from './_lib/prisma.js';
+import { getBracket, getTournamentRow, readState, saveState } from './_lib/store.js';
+import { emptyState } from './_lib/bracket.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!allowMethods(req, res, ['POST'])) return;

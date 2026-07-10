@@ -2,8 +2,8 @@
 // derived bracket response. Keeps the endpoint handlers small.
 
 import type { Bracket, Team, TournamentState } from '../../src/types/bracket';
-import { prisma } from './prisma';
-import { buildBracket, emptyState } from './bracket';
+import { prisma } from './prisma.js';
+import { buildBracket, emptyState } from './bracket.js';
 
 const MAIN = 'main';
 

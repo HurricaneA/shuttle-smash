@@ -1,8 +1,8 @@
 // POST /api/login — public. { password } -> sets an HttpOnly session cookie on success.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { allowMethods, body, json } from './_lib/http';
-import { checkPassword, createToken, setSessionCookie } from './_lib/auth';
+import { allowMethods, body, json } from './_lib/http.js';
+import { checkPassword, createToken, setSessionCookie } from './_lib/auth.js';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   if (!allowMethods(req, res, ['POST'])) return;
