@@ -1,16 +1,17 @@
-// POST /api/seed — admin. Sets the 10 teams IN SEED ORDER and (re)starts the bracket.
+// POST /api/seed — admin. Sets the teams IN SEED ORDER and (re)starts the bracket.
 //
-// Body: { teams: TeamInput[] }  where the array order is the seed order
-//   (index 0 = seed #1) and TeamInput = { id?, name, player1, player2 }.
-// Existing teams keep their id when one is supplied (so names can be edited without
-// losing identity); teams no longer in the roster are removed. Results are reset.
+// Body: { teams: TeamInput[], thirdPlace?: boolean }
+//   teams: length MIN_TEAMS..MAX_TEAMS, array order = seed order (index 0 = seed #1).
+//   TeamInput = { id?, name, player1, player2 }.
+// Existing teams keep their id when supplied (names can be edited without losing
+// identity); teams no longer in the roster are removed. Results are reset.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { allowMethods, body, json } from './_lib/http';
 import { requireAdmin } from './_lib/auth';
 import { prisma } from './_lib/prisma';
 import { getBracket, readState } from './_lib/store';
-import { TEAM_COUNT } from '../src/types/bracket';
+import { MAX_TEAMS, MIN_TEAMS } from '../src/types/bracket';
 
 interface TeamInput {
   id?: string;
@@ -20,7 +21,7 @@ interface TeamInput {
 }
 
 function parseTeams(raw: unknown): TeamInput[] | null {
-  if (!Array.isArray(raw) || raw.length !== TEAM_COUNT) return null;
+  if (!Array.isArray(raw) || raw.length < MIN_TEAMS || raw.length > MAX_TEAMS) return null;
   const out: TeamInput[] = [];
   for (const item of raw) {
     if (!item || typeof item !== 'object') return null;
@@ -41,31 +42,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const teams = parseTeams(body(req).teams);
+  const data = body(req);
+  const teams = parseTeams(data.teams);
   if (!teams) {
-    json(res, 400, { error: `expected exactly ${TEAM_COUNT} teams with name + two players` });
+    json(res, 400, {
+      error: `expected ${MIN_TEAMS}–${MAX_TEAMS} teams, each with a name and two players`,
+    });
     return;
   }
+  const thirdPlace = typeof data.thirdPlace === 'boolean' ? data.thirdPlace : undefined;
 
   try {
     await prisma.$transaction(async (tx) => {
       const existing = await tx.tournament.findUnique({ where: { id: 'main' } });
-      const thirdPlace = readState(existing?.state).thirdPlace;
+      const keepThirdPlace = thirdPlace ?? readState(existing?.state).thirdPlace;
 
       const orderedIds: string[] = [];
       for (let i = 0; i < teams.length; i++) {
         const t = teams[i];
-        const data = { name: t.name, player1: t.player1, player2: t.player2, seed: i + 1 };
+        const teamData = { name: t.name, player1: t.player1, player2: t.player2, seed: i + 1 };
         const saved = t.id
-          ? await tx.team.upsert({ where: { id: t.id }, update: data, create: { id: t.id, ...data } })
-          : await tx.team.create({ data });
+          ? await tx.team.upsert({ where: { id: t.id }, update: teamData, create: { id: t.id, ...teamData } })
+          : await tx.team.create({ data: teamData });
         orderedIds.push(saved.id);
       }
 
       // Drop any teams that are no longer part of the roster.
       await tx.team.deleteMany({ where: { id: { notIn: orderedIds } } });
 
-      const state = { seededTeamIds: orderedIds, results: {}, thirdPlace };
+      const state = { seededTeamIds: orderedIds, results: {}, thirdPlace: keepThirdPlace };
       await tx.tournament.upsert({
         where: { id: 'main' },
         update: { state: state as unknown as object },

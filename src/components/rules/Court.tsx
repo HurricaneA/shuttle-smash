@@ -22,17 +22,34 @@ const MID_X = 90; // center service line
 
 export type ZoneKey = 'bl' | 'br' | 'tl' | 'tr';
 
+/** Court geometry constants (viewBox units), for callers that draw overlays. */
+export const COURT = {
+  OUT_L,
+  OUT_R,
+  TOP,
+  BOT,
+  TRAM_L,
+  TRAM_R,
+  SS_TOP,
+  SS_BOT,
+  DLS_TOP,
+  DLS_BOT,
+  MID_X,
+  NET_Y,
+};
+
 // Doubles service courts: wide (to the outer sideline) but short (to the doubles line).
-export const ZONES: Record<ZoneKey, { x: number; y: number; w: number; h: number }> = {
-  br: { x: MID_X, y: SS_BOT, w: OUT_R - MID_X, h: DLS_BOT - SS_BOT },
-  bl: { x: OUT_L, y: SS_BOT, w: MID_X - OUT_L, h: DLS_BOT - SS_BOT },
-  tr: { x: MID_X, y: DLS_TOP, w: OUT_R - MID_X, h: SS_TOP - DLS_TOP },
-  tl: { x: OUT_L, y: DLS_TOP, w: MID_X - OUT_L, h: SS_TOP - DLS_TOP },
+// Uses width/height so a zone can be spread straight onto an SVG <rect>.
+export const ZONES: Record<ZoneKey, { x: number; y: number; width: number; height: number }> = {
+  br: { x: MID_X, y: SS_BOT, width: OUT_R - MID_X, height: DLS_BOT - SS_BOT },
+  bl: { x: OUT_L, y: SS_BOT, width: MID_X - OUT_L, height: DLS_BOT - SS_BOT },
+  tr: { x: MID_X, y: DLS_TOP, width: OUT_R - MID_X, height: SS_TOP - DLS_TOP },
+  tl: { x: OUT_L, y: DLS_TOP, width: MID_X - OUT_L, height: SS_TOP - DLS_TOP },
 };
 
 export function zoneCenter(z: ZoneKey) {
   const r = ZONES[z];
-  return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
 }
 
 interface CourtProps {

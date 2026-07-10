@@ -5,6 +5,17 @@
 import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 
+// This app connects over Prisma Accelerate (HTTPS), which requires the
+// `prisma+postgres://…?api_key=…` connection string. A direct `postgres://` URL will
+// fail at query time — warn early with a clear pointer.
+const dbUrl = process.env.DATABASE_URL ?? '';
+if (dbUrl && !/^prisma(\+postgres)?:\/\//.test(dbUrl)) {
+  console.warn(
+    '[prisma] DATABASE_URL is not an Accelerate URL. Use the "prisma+postgres://…?api_key=…" ' +
+      'connection string from the Prisma console (not the direct postgres:// one).',
+  );
+}
+
 const makeClient = () => new PrismaClient().$extends(withAccelerate());
 
 const globalForPrisma = globalThis as unknown as {

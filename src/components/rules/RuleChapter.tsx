@@ -7,8 +7,11 @@ export default function RuleChapter({ chapter, index }: { chapter: Chapter; inde
   const visualFirst = index % 2 === 1; // alternate sides on desktop
 
   return (
-    <Reveal className="scroll-mt-24" >
-      <article id={chapter.id} className="grid items-center gap-6 md:grid-cols-2 md:gap-10">
+    <Reveal>
+      <article
+        id={chapter.id}
+        className="scroll-mt-24 grid items-center gap-6 md:grid-cols-2 md:gap-10"
+      >
         {/* Text */}
         <div className={visualFirst ? 'md:order-2' : ''}>
           <div className="flex items-center gap-3">

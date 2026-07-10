@@ -1,7 +1,7 @@
 import { useEffect, useState, type FC } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { VisualId } from '../../content/rules';
-import Court from './Court';
+import Court, { COURT, ZONES } from './Court';
 import { ShuttleShapes } from './primitives';
 import ServeDemo from './ServeDemo';
 
@@ -247,55 +247,106 @@ const FaultsIllustration: FC = () => {
   );
 };
 
-/* 6 — Let: shuttle caught on the net, the rally is replayed. */
-const LetIllustration: FC = () => (
-  <Panel>
-    <svg viewBox="0 0 200 150" className="w-full max-w-[300px]">
-      <line x1="20" y1="128" x2="180" y2="128" stroke={NAVY} strokeWidth="2" />
-      {/* net */}
-      <line x1="100" y1="128" x2="100" y2="56" stroke={NAVY} strokeWidth="2.5" />
-      <line x1="76" y1="58" x2="124" y2="58" stroke={NAVY} strokeWidth="2" />
-      <g stroke={NAVY} strokeWidth="0.5" opacity="0.5">
-        <line x1="86" y1="60" x2="86" y2="126" />
-        <line x1="100" y1="60" x2="100" y2="126" />
-        <line x1="114" y1="60" x2="114" y2="126" />
-        <line x1="76" y1="80" x2="124" y2="80" />
-        <line x1="76" y1="104" x2="124" y2="104" />
-      </g>
-      {/* shuttle stuck on the net */}
-      <g transform="translate(100, 70)" className="anim-wobble">
-        <ShuttleShapes scale={1.1} />
-      </g>
-      {/* replay arrow */}
-      <g transform="translate(150, 92)" className="anim-spin">
-        <path d="M0 -12 A12 12 0 1 1 -11 5" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" />
-        <path d="M-14 -1 L-11 5 L-5 3" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-      </g>
-      <text x="150" y="120" textAnchor="middle" fontSize="9" fontWeight="800" fill={NAVY}>
-        REPLAY
-      </text>
-    </svg>
-  </Panel>
-);
+/* 6 — Let: shuttle caught on the net cord, gently swinging; the rally is replayed. */
+const LetIllustration: FC = () => {
+  const reduce = useReducedMotion();
+  return (
+    <Panel>
+      <svg viewBox="0 0 200 156" className="w-full max-w-[300px]">
+        <line x1="20" y1="128" x2="180" y2="128" stroke={NAVY} strokeWidth="2" />
+        {/* net */}
+        <line x1="100" y1="128" x2="100" y2="52" stroke={NAVY} strokeWidth="2.5" />
+        <line x1="72" y1="54" x2="128" y2="54" stroke={NAVY} strokeWidth="2.5" />
+        <g stroke={NAVY} strokeWidth="0.5" opacity="0.4">
+          <line x1="82" y1="56" x2="82" y2="126" />
+          <line x1="91" y1="56" x2="91" y2="126" />
+          <line x1="100" y1="56" x2="100" y2="126" />
+          <line x1="109" y1="56" x2="109" y2="126" />
+          <line x1="118" y1="56" x2="118" y2="126" />
+          <line x1="72" y1="74" x2="128" y2="74" />
+          <line x1="72" y1="94" x2="128" y2="94" />
+          <line x1="72" y1="114" x2="128" y2="114" />
+        </g>
+        {/* shuttle caught on the cord, dangling and teetering from the contact point */}
+        <motion.g
+          style={{ transformBox: 'view-box', transformOrigin: '100px 56px' }}
+          animate={reduce ? {} : { rotate: [-8, 8, -8] }}
+          transition={reduce ? {} : { duration: 2.8, ease: 'easeInOut', repeat: Infinity }}
+        >
+          <g transform="translate(100, 70) rotate(180)">
+            <ShuttleShapes scale={1.15} />
+          </g>
+        </motion.g>
+        {/* replay: a clean circular arrow that sweeps, then pauses */}
+        <motion.g
+          style={{ transformBox: 'view-box', transformOrigin: '152px 92px' }}
+          animate={reduce ? {} : { rotate: [0, 360] }}
+          transition={reduce ? {} : { duration: 0.9, ease: [0.16, 1, 0.3, 1], repeat: Infinity, repeatDelay: 1.6 }}
+        >
+          <path d="M152 80 A12 12 0 1 1 140 92" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" />
+          <path d="M147 79 L152.5 80 L151 85.5" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </motion.g>
+        <text x="100" y="150" textAnchor="middle" fontSize="10" fontWeight="800" fill={NAVY}>
+          LET — REPLAY THE RALLY
+        </text>
+      </svg>
+    </Panel>
+  );
+};
 
-/* 7 — Doubles Court: wider sidelines, shorter service box. */
-const DoublesCourtIllustration: FC = () => (
-  <Panel>
-    <div className="w-full">
-      <Court emphasizeSidelines emphasizeServiceDepth className="mx-auto w-full max-w-[190px]" />
-      <div className="mx-auto mt-3 max-w-[240px] space-y-1.5 text-xs text-brand-ink/80">
-        <p className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-sm bg-brand-gold/60" />
-          Wider doubles sidelines are <strong>in play</strong>.
-        </p>
-        <p className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-sm bg-brand-navy/20" />
-          Shaded back = <strong>outside</strong> the server's shorter box.
-        </p>
+/* 7 — Doubles Court: the service area is wider (full width) but shorter (pulled in at the back). */
+const DoublesCourtIllustration: FC = () => {
+  const reduce = useReducedMotion();
+  const g = COURT;
+  const pulseT = { duration: 2.4, ease: 'easeInOut' as const, repeat: Infinity };
+  return (
+    <Panel>
+      <div className="w-full">
+        <Court className="mx-auto w-full max-w-[180px]">
+          {/* excluded back strips = the "shorter" part, outside the server's box */}
+          <g fill="rgb(var(--brand-navy) / 0.18)">
+            <rect x={g.OUT_L} y={g.DLS_BOT} width={g.OUT_R - g.OUT_L} height={g.BOT - g.DLS_BOT} />
+            <rect x={g.OUT_L} y={g.TOP} width={g.OUT_R - g.OUT_L} height={g.DLS_TOP - g.TOP} />
+          </g>
+          {/* wider doubles sidelines in play */}
+          <motion.g
+            fill="rgb(var(--brand-gold) / 0.55)"
+            animate={reduce ? { opacity: 0.5 } : { opacity: [0.3, 0.6, 0.3] }}
+            transition={reduce ? {} : pulseT}
+          >
+            <rect x={g.OUT_L} y={g.TOP} width={g.TRAM_L - g.OUT_L} height={g.BOT - g.TOP} />
+            <rect x={g.TRAM_R} y={g.TOP} width={g.OUT_R - g.TRAM_R} height={g.BOT - g.TOP} />
+          </motion.g>
+          {/* the server's service area — full width, only to the doubles line (short) */}
+          <motion.g
+            fill="rgb(var(--brand-gold) / 0.4)"
+            animate={reduce ? { opacity: 0.35 } : { opacity: [0.15, 0.45, 0.15] }}
+            transition={reduce ? {} : { ...pulseT, delay: 0.8 }}
+          >
+            <rect {...ZONES.bl} />
+            <rect {...ZONES.br} />
+          </motion.g>
+        </Court>
+        <div className="mx-auto mt-3 grid max-w-[260px] gap-2 text-xs text-brand-ink/85">
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 inline-block h-3.5 w-3.5 shrink-0 rounded-sm bg-brand-gold/70" />
+            <span>
+              <strong className="text-brand-navy">Wider:</strong> the outer sidelines are in play
+              for doubles.
+            </span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 inline-block h-3.5 w-3.5 shrink-0 rounded-sm bg-brand-navy/25" />
+            <span>
+              <strong className="text-brand-navy">Shorter:</strong> the shaded back strip is outside
+              the server's box.
+            </span>
+          </div>
+        </div>
       </div>
-    </div>
-  </Panel>
-);
+    </Panel>
+  );
+};
 
 export const VISUALS: Record<VisualId, FC> = {
   objective: ObjectiveIllustration,

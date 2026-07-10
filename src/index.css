@@ -17,6 +17,8 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* keep in-page anchor targets clear of the sticky navbar */
+    scroll-padding-top: 5.5rem;
   }
 
   body {

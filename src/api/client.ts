@@ -55,10 +55,10 @@ export const api = {
 
   logout: () => request<{ admin: boolean }>('logout', { method: 'POST' }).then((r) => r.admin),
 
-  seed: (teams: TeamInput[]) =>
+  seed: (teams: TeamInput[], thirdPlace: boolean) =>
     request<{ bracket: Bracket }>('seed', {
       method: 'POST',
-      body: JSON.stringify({ teams }),
+      body: JSON.stringify({ teams, thirdPlace }),
     }).then((r) => r.bracket),
 
   setResult: (matchId: string, winnerId: string) =>
