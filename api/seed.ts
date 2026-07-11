@@ -1,17 +1,17 @@
-// POST /api/seed — admin. Sets the teams IN SEED ORDER and (re)starts the bracket.
+// POST /api/seed — admin. Sets the two group-table rosters and (re)starts everything.
 //
-// Body: { teams: TeamInput[], thirdPlace?: boolean }
-//   teams: length MIN_TEAMS..MAX_TEAMS, array order = seed order (index 0 = seed #1).
+// Body: { tableA: TeamInput[], tableB: TeamInput[] }
+//   Each table: MIN_PER_TABLE..MAX_PER_TABLE teams, in table order (A1, A2, ...).
 //   TeamInput = { id?, name, player1, player2 }.
-// Existing teams keep their id when supplied (names can be edited without losing
-// identity); teams no longer in the roster are removed. Results are reset.
+// Existing teams keep their id when supplied; teams in neither table are removed.
+// All results + scores are reset.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { allowMethods, body, json } from './_lib/http.js';
 import { requireAdmin } from './_lib/auth.js';
 import { prisma } from './_lib/prisma.js';
-import { getBracket, readState } from './_lib/store.js';
-import { MAX_TEAMS, MIN_TEAMS } from './_lib/bracket.js';
+import { getTournament } from './_lib/store.js';
+import { MAX_PER_TABLE, MIN_PER_TABLE } from './_lib/bracket.js';
 
 interface TeamInput {
   id?: string;
@@ -20,8 +20,8 @@ interface TeamInput {
   player2: string;
 }
 
-function parseTeams(raw: unknown): TeamInput[] | null {
-  if (!Array.isArray(raw) || raw.length < MIN_TEAMS || raw.length > MAX_TEAMS) return null;
+function parseTable(raw: unknown): TeamInput[] | null {
+  if (!Array.isArray(raw) || raw.length < MIN_PER_TABLE || raw.length > MAX_PER_TABLE) return null;
   const out: TeamInput[] = [];
   for (const item of raw) {
     if (!item || typeof item !== 'object') return null;
@@ -43,34 +43,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const data = body(req);
-  const teams = parseTeams(data.teams);
-  if (!teams) {
+  const tableA = parseTable(data.tableA);
+  const tableB = parseTable(data.tableB);
+  if (!tableA || !tableB) {
     json(res, 400, {
-      error: `expected ${MIN_TEAMS}–${MAX_TEAMS} teams, each with a name and two players`,
+      error: `each table needs ${MIN_PER_TABLE}–${MAX_PER_TABLE} teams, each with a name and two players`,
     });
     return;
   }
-  const thirdPlace = typeof data.thirdPlace === 'boolean' ? data.thirdPlace : undefined;
 
   try {
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.tournament.findUnique({ where: { id: 'main' } });
-      const keepThirdPlace = thirdPlace ?? readState(existing?.state).thirdPlace;
-
-      const orderedIds: string[] = [];
-      for (let i = 0; i < teams.length; i++) {
-        const t = teams[i];
-        const teamData = { name: t.name, player1: t.player1, player2: t.player2, seed: i + 1 };
-        const saved = t.id
+      const save = async (t: TeamInput) => {
+        const teamData = { name: t.name, player1: t.player1, player2: t.player2, seed: null };
+        const row = t.id
           ? await tx.team.upsert({ where: { id: t.id }, update: teamData, create: { id: t.id, ...teamData } })
           : await tx.team.create({ data: teamData });
-        orderedIds.push(saved.id);
-      }
+        return row.id;
+      };
 
-      // Drop any teams that are no longer part of the roster.
-      await tx.team.deleteMany({ where: { id: { notIn: orderedIds } } });
+      const idsA: string[] = [];
+      for (const t of tableA) idsA.push(await save(t));
+      const idsB: string[] = [];
+      for (const t of tableB) idsB.push(await save(t));
 
-      const state = { seededTeamIds: orderedIds, results: {}, scores: {}, thirdPlace: keepThirdPlace };
+      await tx.team.deleteMany({ where: { id: { notIn: [...idsA, ...idsB] } } });
+
+      const state = { tableA: idsA, tableB: idsB, results: {}, scores: {} };
       await tx.tournament.upsert({
         where: { id: 'main' },
         update: { state: state as unknown as object },
@@ -78,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     });
 
-    json(res, 200, { bracket: await getBracket() });
+    json(res, 200, { bracket: await getTournament() });
   } catch (err) {
     console.error('POST /api/seed failed', err);
     json(res, 500, { error: 'internal_error' });

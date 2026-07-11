@@ -1,81 +1,80 @@
 // Canonical types shared by the API (api/_lib) and the React UI.
 // The API imports these as `import type` so there is zero runtime coupling.
 //
-// The bracket is a general single-elimination tree for any team count between
-// MIN_TEAMS and MAX_TEAMS. Rounds are dynamic (not a fixed enum), so a bracket for
-// 6, 10 or 24 teams all render through the same code.
+// Format: two round-robin group tables (A & B) feed an IPL-style Top-4 playoff
+// (Qualifier 1 / Eliminator / Qualifier 2 / Final). Standings rank by wins, then by
+// point difference (sum of winning margins). The whole thing is derived on read from
+// a minimal persisted state.
 
-export type SlotKey = 'a' | 'b';
+export type TableId = 'A' | 'B';
 
-/** A team = a doubles pair. */
+/** A team = a doubles pair, assigned to a group table. */
 export interface Team {
   id: string;
   name: string;
   player1: string;
   player2: string;
-  seed: number | null; // 1..N once seeded; null before
+  table: TableId | null; // which group (null before assignment)
+  position: number | null; // 1-based slot within the table (A1, A2, ...)
 }
 
-/** Where a winner (or loser, for the 3rd-place match) flows next. */
-export interface Feeder {
-  matchId: string;
-  slot: SlotKey;
-}
-
+/** A single match — a group fixture or a playoff tie. */
 export interface Match {
-  id: string; // e.g. "r0m1", "r2m0", "third"
-  round: number; // 0-based; 0 = first round played, last = final
-  roundName: string; // "Play-in", "Quarterfinals", "Final", "Round of 16", ...
-  label: string; // per-round match label, e.g. "Match 1"
-  a: string | null; // teamId, or null = TBD / awaiting a feeder / bye
+  id: string;
+  kind: 'group' | 'playoff';
+  label: string; // "Qualifier 1", "Final", or "" for a group fixture
+  sublabel: string | null; // "Winner → Final · Loser out", or "Day 2"
+  tableId: TableId | null; // group fixtures only
+  round: number | null; // group round / day
+  a: string | null; // teamId in slot a (or null = TBD)
   b: string | null;
-  winner: string | null; // teamId (echoed from stored results)
-  scoreA: number | null; // recorded score for slot a (null = not recorded)
-  scoreB: number | null; // recorded score for slot b
-  next: Feeder | null; // where the winner advances
-  nextLoser: Feeder | null; // where the loser goes (semifinal -> 3rd-place only)
+  winner: string | null;
+  scoreA: number | null;
+  scoreB: number | null;
+}
+
+/** One row of a group table's standings. */
+export interface Standing {
+  teamId: string;
+  rank: number; // 1-based
+  played: number;
+  won: number;
+  lost: number;
+  diff: number; // point difference = sum of winning margins
+  points: number; // won * 2
+  qualified: boolean; // top 2 advance to the playoffs
+}
+
+export interface GroupTable {
+  table: TableId;
+  standings: Standing[];
+  matches: Match[]; // round-robin fixtures
+}
+
+export interface Playoffs {
+  matches: Match[]; // [q1, elim, q2, final]
+  champion: string | null;
+}
+
+/** The full, derived tournament returned by GET /api/bracket. */
+export interface Tournament {
+  name: string;
+  teams: Team[];
+  tables: GroupTable[]; // [A, B]
+  playoffs: Playoffs;
+  published: boolean; // both tables have at least one team
+  playoffsReady: boolean; // both tables have >= 2 teams
+  champion: string | null;
 }
 
 /** The minimal state persisted in the single Tournament row. */
 export interface TournamentState {
-  seededTeamIds: string[]; // length N once seeded; index 0 = seed #1
+  tableA: string[]; // ordered team ids in Table A
+  tableB: string[]; // ordered team ids in Table B
   results: Record<string, string>; // matchId -> winning teamId
   scores: Record<string, { a: number; b: number }>; // matchId -> slot a/b scores
-  thirdPlace: boolean;
 }
 
-/** One column of the bracket tree. */
-export interface BracketRound {
-  round: number;
-  name: string;
-  matches: Match[];
-}
-
-/** The full, derived bracket returned by GET /api/bracket. */
-export interface Bracket {
-  name: string;
-  teams: Team[];
-  rounds: BracketRound[]; // ordered first -> final (the main tree)
-  thirdPlaceMatch: Match | null;
-  matches: Match[]; // flat, for lookups (includes the 3rd-place match)
-  thirdPlace: boolean;
-  seeded: boolean; // a valid bracket exists (teamCount >= MIN_TEAMS)
-  teamCount: number;
-  champion: string | null; // winner of the final, if decided
-}
-
-/** Supported team-count range for a single-elimination bracket. */
-export const MIN_TEAMS = 2;
-export const MAX_TEAMS = 32;
-
-/** Smallest power of two >= n (the bracket size). Minimum 2. */
-export function bracketSizeFor(n: number): number {
-  let p = 2;
-  while (p < n) p *= 2;
-  return p;
-}
-
-/** Number of first-round byes for n teams. */
-export function byesFor(n: number): number {
-  return n >= MIN_TEAMS ? bracketSizeFor(n) - n : 0;
-}
+/** Team-count guardrails per table (round-robin works for any size in range). */
+export const MIN_PER_TABLE = 2;
+export const MAX_PER_TABLE = 8;

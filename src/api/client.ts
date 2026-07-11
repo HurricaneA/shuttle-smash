@@ -1,6 +1,6 @@
 // Typed fetch wrappers around the same-origin /api functions.
 
-import type { Bracket } from '../types/bracket';
+import type { Tournament } from '../types/bracket';
 
 export interface TeamInput {
   id?: string;
@@ -43,7 +43,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getBracket: () => request<{ bracket: Bracket }>('bracket').then((r) => r.bracket),
+  getTournament: () => request<{ bracket: Tournament }>('bracket').then((r) => r.bracket),
 
   getMe: () => request<{ admin: boolean }>('me').then((r) => r.admin),
 
@@ -55,32 +55,32 @@ export const api = {
 
   logout: () => request<{ admin: boolean }>('logout', { method: 'POST' }).then((r) => r.admin),
 
-  seed: (teams: TeamInput[], thirdPlace: boolean) =>
-    request<{ bracket: Bracket }>('seed', {
+  seed: (tableA: TeamInput[], tableB: TeamInput[]) =>
+    request<{ bracket: Tournament }>('seed', {
       method: 'POST',
-      body: JSON.stringify({ teams, thirdPlace }),
+      body: JSON.stringify({ tableA, tableB }),
     }).then((r) => r.bracket),
 
   setResult: (matchId: string, winnerId: string) =>
-    request<{ bracket: Bracket }>('result', {
+    request<{ bracket: Tournament }>('result', {
       method: 'PATCH',
       body: JSON.stringify({ matchId, winnerId }),
     }).then((r) => r.bracket),
 
   setScore: (matchId: string, scoreA: number, scoreB: number) =>
-    request<{ bracket: Bracket }>('result', {
+    request<{ bracket: Tournament }>('result', {
       method: 'PATCH',
       body: JSON.stringify({ matchId, scoreA, scoreB }),
     }).then((r) => r.bracket),
 
   clearResult: (matchId: string) =>
-    request<{ bracket: Bracket }>('result', {
+    request<{ bracket: Tournament }>('result', {
       method: 'PATCH',
       body: JSON.stringify({ matchId, winnerId: '' }),
     }).then((r) => r.bracket),
 
   reset: (clearTeams: boolean) =>
-    request<{ bracket: Bracket }>('reset', {
+    request<{ bracket: Tournament }>('reset', {
       method: 'POST',
       body: JSON.stringify({ clearTeams }),
     }).then((r) => r.bracket),

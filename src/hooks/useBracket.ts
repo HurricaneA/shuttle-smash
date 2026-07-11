@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Bracket } from '../types/bracket';
+import type { Tournament } from '../types/bracket';
 import { api } from '../api/client';
 
-/** Fetch the bracket once, and optionally poll every `pollMs` for live updates. */
-export function useBracket(pollMs?: number) {
-  const [bracket, setBracket] = useState<Bracket | null>(null);
+/** Fetch the tournament once, and optionally poll every `pollMs` for live updates. */
+export function useTournament(pollMs?: number) {
+  const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      const b = await api.getBracket();
-      setBracket(b);
+      const t = await api.getTournament();
+      setTournament(t);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load bracket');
+      setError(e instanceof Error ? e.message : 'Failed to load tournament');
     } finally {
       setLoading(false);
     }
@@ -27,5 +27,5 @@ export function useBracket(pollMs?: number) {
     return () => window.clearInterval(id);
   }, [refresh, pollMs]);
 
-  return { bracket, loading, error, refresh, setBracket };
+  return { tournament, loading, error, refresh, setTournament };
 }

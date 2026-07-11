@@ -37,16 +37,21 @@ export default function MatchCard({ match, teams, editable, busy, onPick, onScor
 
   return (
     <div className="w-[220px]">
-      <div className="mb-1 flex items-center justify-between px-1">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-          {match.label}
-        </span>
-        {busy && <span className="text-[10px] text-brand-royal">saving…</span>}
+      <div className="mb-1 flex items-start justify-between gap-2 px-1">
+        <div className="min-w-0">
+          {match.label && (
+            <div className="text-[11px] font-bold uppercase tracking-wide text-brand-navy">
+              {match.label}
+            </div>
+          )}
+          {match.sublabel && <div className="text-[10px] text-slate-400">{match.sublabel}</div>}
+        </div>
+        {busy && <span className="shrink-0 text-[10px] text-brand-royal">saving…</span>}
       </div>
       <div className="divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <TeamSlot
           team={teamA}
-          seed={teamA?.seed}
+          seed={teamA?.position}
           score={editable ? null : match.scoreA}
           isWinner={match.winner != null && match.winner === match.a}
           editable={editable}
@@ -55,7 +60,7 @@ export default function MatchCard({ match, teams, editable, busy, onPick, onScor
         />
         <TeamSlot
           team={teamB}
-          seed={teamB?.seed}
+          seed={teamB?.position}
           score={editable ? null : match.scoreB}
           isWinner={match.winner != null && match.winner === match.b}
           editable={editable}

@@ -1,20 +1,20 @@
-// PATCH /api/result — admin. Set a match score/winner, or clear it.
+// PATCH /api/result — admin. Set a match score/winner, or clear it. Works for any
+// match id (group fixture or playoff tie).
 //
 // Body: { matchId: string, winnerId?: string, scoreA?: number, scoreB?: number }
 //   - scoreA & scoreB present -> record the score; the higher score is the winner
 //     (must not be equal, and both teams must be known).
 //   - winnerId present (no scores) -> set the winner directly (walkover/quick pick).
-//   - nothing set -> clears that match's result + score (for corrections).
-// The winner is validated against a freshly DERIVED bracket, so the stored state can
-// never be pushed into an inconsistent shape.
+//   - nothing set -> clears that match's result + score.
+// The winner is validated against the freshly DERIVED tournament, so the stored state
+// can never be pushed into an inconsistent shape.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { allowMethods, body, json } from './_lib/http.js';
 import { requireAdmin } from './_lib/auth.js';
-import { deriveBracket } from './_lib/bracket.js';
-import { getBracket, getTournamentRow, readState, saveState } from './_lib/store.js';
+import { buildTournament } from './_lib/bracket.js';
+import { allMatches, getTournament, getTournamentRow, loadTeams, readState, saveState } from './_lib/store.js';
 
-/** Parse a score value that may arrive as a number or a numeric string. */
 function toScore(v: unknown): number | null {
   const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN;
   return Number.isInteger(n) && n >= 0 && n <= 99 ? n : null;
@@ -37,18 +37,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const row = await getTournamentRow();
+    const [row, teams] = await Promise.all([getTournamentRow(), loadTeams()]);
     const state = readState(row.state);
 
-    const matches = deriveBracket(state.seededTeamIds, state.results, state.scores, state.thirdPlace);
-    const match = matches.find((m) => m.id === matchId);
+    const tournament = buildTournament(teams, state, row.name);
+    const match = allMatches(tournament).find((m) => m.id === matchId);
     if (!match) {
       json(res, 400, { error: 'unknown match' });
       return;
     }
 
     if (hasScoreKeys) {
-      // Score entry decides the winner.
       const sa = toScore(data.scoreA);
       const sb = toScore(data.scoreB);
       if (sa === null || sb === null) {
@@ -66,7 +65,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       state.results[matchId] = sa > sb ? match.a : match.b;
       state.scores[matchId] = { a: sa, b: sb };
     } else if (winnerId) {
-      // Quick winner without a score (e.g. a walkover).
       if (match.a !== winnerId && match.b !== winnerId) {
         json(res, 400, { error: 'winner is not a participant of that match' });
         return;
@@ -79,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     await saveState(state);
-    json(res, 200, { bracket: await getBracket() });
+    json(res, 200, { bracket: await getTournament() });
   } catch (err) {
     console.error('PATCH /api/result failed', err);
     json(res, 500, { error: 'internal_error' });

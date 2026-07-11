@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import { useBracket } from '../hooks/useBracket';
+import { useTournament } from '../hooks/useBracket';
 import LoginForm from '../components/admin/LoginForm';
-import SeedEditor from '../components/admin/SeedEditor';
-import BracketEditor from '../components/admin/BracketEditor';
+import TableEditor from '../components/admin/TableEditor';
+import ResultsEditor from '../components/admin/ResultsEditor';
 
 type Tab = 'teams' | 'results';
 
@@ -11,7 +11,7 @@ export default function Admin() {
   const [authChecked, setAuthChecked] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [tab, setTab] = useState<Tab>('teams');
-  const { bracket, loading, error, refresh, setBracket } = useBracket();
+  const { tournament, loading, error, refresh, setTournament } = useTournament();
 
   useEffect(() => {
     api
@@ -21,10 +21,9 @@ export default function Admin() {
       .finally(() => setAuthChecked(true));
   }, []);
 
-  // Default to the results tab once a bracket exists.
   useEffect(() => {
-    if (bracket?.seeded) setTab('results');
-  }, [bracket?.seeded]);
+    if (tournament?.published) setTab('results');
+  }, [tournament?.published]);
 
   const logout = async () => {
     await api.logout().catch(() => {});
@@ -47,11 +46,11 @@ export default function Admin() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-extrabold text-brand-navy">Organizer Dashboard</h1>
-          <p className="text-sm text-brand-ink/60">Set up teams and update live results.</p>
+          <p className="text-sm text-brand-ink/60">Set up the tables and record live results.</p>
         </div>
         <button type="button" onClick={logout} className="btn-ghost">
           Sign out
@@ -60,30 +59,30 @@ export default function Admin() {
 
       <div className="mt-6 flex gap-2 border-b border-slate-200">
         <TabButton active={tab === 'teams'} onClick={() => setTab('teams')}>
-          Teams &amp; Seeding
+          Teams &amp; Tables
         </TabButton>
         <TabButton active={tab === 'results'} onClick={() => setTab('results')}>
-          Update Results
+          Results &amp; Playoffs
         </TabButton>
       </div>
 
       <div className="mt-6">
         {loading && <p className="text-brand-ink/60">Loading…</p>}
-        {error && !bracket && <p className="text-red-600">{error}</p>}
+        {error && !tournament && <p className="text-red-600">{error}</p>}
 
-        {bracket && tab === 'teams' && <SeedEditor bracket={bracket} onSeeded={setBracket} />}
+        {tournament && tab === 'teams' && <TableEditor tournament={tournament} onSeeded={setTournament} />}
 
-        {bracket && tab === 'results' &&
-          (bracket.seeded ? (
-            <BracketEditor bracket={bracket} onChange={setBracket} />
+        {tournament && tab === 'results' &&
+          (tournament.published ? (
+            <ResultsEditor tournament={tournament} onChange={setTournament} />
           ) : (
             <div className="card text-center">
               <p className="text-brand-ink/70">
-                No bracket yet. Add your {`teams`} in the <strong>Teams &amp; Seeding</strong> tab
-                first.
+                No tournament yet. Add teams to both tables in the{' '}
+                <strong>Teams &amp; Tables</strong> tab first.
               </p>
               <button type="button" className="btn-primary mt-4" onClick={() => setTab('teams')}>
-                Go to Teams &amp; Seeding
+                Go to Teams &amp; Tables
               </button>
             </div>
           ))}

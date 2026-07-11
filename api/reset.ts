@@ -1,12 +1,11 @@
-// POST /api/reset — admin. Clears match results (keeps teams + seeding by default).
-// Body: { clearTeams?: boolean } — if true, also removes all teams and unseeds.
+// POST /api/reset — admin. Clears match results + scores (keeps the rosters by default).
+// Body: { clearTeams?: boolean } — if true, also removes all teams and empties the tables.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { allowMethods, body, json } from './_lib/http.js';
 import { requireAdmin } from './_lib/auth.js';
 import { prisma } from './_lib/prisma.js';
-import { getBracket, getTournamentRow, readState, saveState } from './_lib/store.js';
-import { emptyState } from './_lib/bracket.js';
+import { emptyState, getTournament, getTournamentRow, readState, saveState } from './_lib/store.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!allowMethods(req, res, ['POST'])) return;
@@ -18,18 +17,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const clearTeams = body(req).clearTeams === true;
 
   try {
-    const row = await getTournamentRow();
-    const state = readState(row.state);
-
     if (clearTeams) {
       await prisma.team.deleteMany({});
-      await saveState(emptyState(state.thirdPlace));
+      await saveState(emptyState());
     } else {
-      // Keep the roster + seed order; wipe only the recorded results + scores.
+      const row = await getTournamentRow();
+      const state = readState(row.state);
+      // Keep the rosters; wipe only the recorded results + scores.
       await saveState({ ...state, results: {}, scores: {} });
     }
 
-    json(res, 200, { bracket: await getBracket() });
+    json(res, 200, { bracket: await getTournament() });
   } catch (err) {
     console.error('POST /api/reset failed', err);
     json(res, 500, { error: 'internal_error' });
