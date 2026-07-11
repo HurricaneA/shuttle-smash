@@ -17,7 +17,7 @@ export default function Bracket() {
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-10 text-center">
           <h1 className="text-4xl font-extrabold text-white sm:text-5xl">Live Standings &amp; Bracket</h1>
           <p className="text-white/80">
-            Two groups · round-robin · Top 4 playoffs (IPL format) · updates automatically
+            Two groups · round-robin · Top 4 playoffs · updates automatically
           </p>
         </div>
       </section>

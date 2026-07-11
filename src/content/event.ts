@@ -16,7 +16,7 @@ export const event = {
     { label: 'Date', value: '2026' },
     { label: 'Time', value: '9:00 AM – 5:00 PM' },
     { label: 'Venue', value: 'Sigma Badminton Court, Rathmalana' },
-    { label: 'Format', value: 'Doubles · 2 groups · Top 4 (IPL format)' },
+    { label: 'Format', value: 'Doubles · 2 groups · Top 4' },
     { label: 'Players per team', value: 'Two' },
     { label: 'Number of teams', value: '10 Teams · 2 tables of 5' },
     { label: 'Team selection', value: 'Confirmed by the organizing committee' },
