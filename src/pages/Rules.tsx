@@ -2,6 +2,18 @@ import { rules, rulesIntro } from '../content/rules';
 import RuleChapter from '../components/rules/RuleChapter';
 import { ShuttleIcon } from '../components/rules/primitives';
 
+/** Smooth-scroll to a section, offset by the actual sticky-navbar height. */
+function jumpTo(e: React.MouseEvent, id: string) {
+  e.preventDefault();
+  const el = document.getElementById(id);
+  if (!el) return;
+  const header = document.querySelector('header');
+  const offset = (header?.offsetHeight ?? 64) + 16;
+  const top = el.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top, behavior: 'smooth' });
+  window.history.replaceState(null, '', `#${id}`);
+}
+
 export default function Rules() {
   return (
     <>
@@ -15,6 +27,7 @@ export default function Rules() {
               <a
                 key={r.id}
                 href={`#${r.id}`}
+                onClick={(e) => jumpTo(e, r.id)}
                 className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 transition-colors hover:bg-brand-gold hover:text-brand-navy"
               >
                 {r.number}. {r.heading}

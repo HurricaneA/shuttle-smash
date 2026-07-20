@@ -7,10 +7,11 @@ export default function RuleChapter({ chapter, index }: { chapter: Chapter; inde
   const visualFirst = index % 2 === 1; // alternate sides on desktop
 
   return (
-    <Reveal>
+    // opacity-only reveal (y=0) so it never shifts the anchor target under the navbar
+    <Reveal y={0}>
       <article
         id={chapter.id}
-        className="scroll-mt-24 grid items-center gap-6 md:grid-cols-2 md:gap-10"
+        className="scroll-mt-28 grid items-center gap-6 md:grid-cols-2 md:gap-10"
       >
         {/* Text */}
         <div className={visualFirst ? 'md:order-2' : ''}>
