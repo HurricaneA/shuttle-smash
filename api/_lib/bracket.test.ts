@@ -48,12 +48,25 @@ describe('group fixtures + schedule', () => {
     expect(s.filter((r) => r.kind === 'playoff')).toHaveLength(3);
   });
 
-  it('flags published / playoffsReady from the rosters', () => {
+  it('flags published always, playoffsReady only once both groups finish', () => {
     expect(build(st()).published).toBe(true);
-    expect(build(st()).playoffsReady).toBe(true);
-    expect(build(st(['a1'], ['b1'])).playoffsReady).toBe(false);
+    expect(build(st()).playoffsReady).toBe(false); // no results yet
+    const r: Record<string, string> = {};
+    const sc: Record<string, { a: number; b: number }> = {};
+    transitive(A, r, sc);
+    transitive(B, r, sc);
+    expect(build(st(A, B, r, sc)).playoffsReady).toBe(true);
     expect(build(st(A, [])).published).toBe(false);
     expect(build(emptyState()).published).toBe(false);
+  });
+
+  it('marks the top 2 as qualified only once the group is complete', () => {
+    expect(groupA(build(st())).standings.some((s) => s.qualified)).toBe(false);
+    const r: Record<string, string> = {};
+    const sc: Record<string, { a: number; b: number }> = {};
+    transitive(A, r, sc);
+    transitive(B, r, sc);
+    expect(groupA(build(st(A, B, r, sc))).standings.filter((s) => s.qualified)).toHaveLength(2);
   });
 });
 

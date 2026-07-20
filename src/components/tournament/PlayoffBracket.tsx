@@ -32,8 +32,8 @@ export default function PlayoffBracket({ playoffs, teams, ready, editable, busyM
   if (!ready) {
     return (
       <div className="rounded-2xl border-2 border-dashed border-brand-royal/30 bg-white p-6 text-center text-sm text-brand-ink/70">
-        The playoffs unlock once both tables have their top 2 — Qualifier 1 (A1 vs B1), Eliminator
-        (A2 vs B2), then Qualifier 2 and the Final.
+        The playoffs unlock once both groups finish their round-robin — Qualifier 1 (A1 vs B1),
+        Eliminator (A2 vs B2), then Qualifier 2 and the Final.
       </div>
     );
   }

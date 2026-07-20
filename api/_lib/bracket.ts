@@ -136,6 +136,9 @@ function computeStandings(ids: string[], matches: Match[]): Standing[] {
       sl.diff -= margin; // ...and the loser drops it (point difference works both ways)
     }
   }
+  // Only mark the top 2 as qualified once every fixture in the group is decided —
+  // no premature highlight before matches are played.
+  const complete = matches.length > 0 && matches.every((m) => m.winner);
   return ids
     .map((id, idx) => ({ id, idx, ...stat.get(id)! }))
     .sort((x, y) => y.won - x.won || y.diff - x.diff || x.idx - y.idx)
@@ -147,18 +150,29 @@ function computeStandings(ids: string[], matches: Match[]): Standing[] {
       lost: o.lost,
       diff: o.diff,
       points: o.won * 2,
-      qualified: i < 2,
+      qualified: complete && i < 2,
     }));
 }
 
-/** Derive the IPL Top-4 playoffs from the two tables' standings. */
-function derivePlayoffs(standA: Standing[], standB: Standing[], results: Results, scores: Scores) {
-  const at = (s: Standing[], i: number) => s[i]?.teamId ?? null;
+/** True once every fixture in a group has a recorded winner. */
+function groupComplete(matches: Match[]): boolean {
+  return matches.length > 0 && matches.every((m) => m.winner);
+}
+
+/** Derive the IPL Top-4 playoffs from the four seeded teams (null = TBD). */
+function derivePlayoffs(
+  a1: string | null,
+  b1: string | null,
+  a2: string | null,
+  b2: string | null,
+  results: Results,
+  scores: Scores,
+) {
   const mk = (id: string, label: string, sublabel: string | null, a: string | null, b: string | null) =>
     newMatch({ id, kind: 'playoff', label, sublabel, a, b });
 
-  const q1 = mk('q1', 'Qualifier 1', 'Winner → Final · Loser → Qualifier 2', at(standA, 0), at(standB, 0));
-  const elim = mk('elim', 'Eliminator', 'Winner → Qualifier 2 · Loser out', at(standA, 1), at(standB, 1));
+  const q1 = mk('q1', 'Qualifier 1', 'Winner → Final · Loser → Qualifier 2', a1, b1);
+  const elim = mk('elim', 'Eliminator', 'Winner → Qualifier 2 · Loser out', a2, b2);
   const q1r = applyResult(q1, results, scores);
   const elimR = applyResult(elim, results, scores);
 
@@ -201,9 +215,17 @@ export function buildTournament(teamsFromDb: Team[], state: TournamentState, nam
   };
   const nFixtures = Math.max(fixtures.A.length, fixtures.B.length);
 
+  const standings: Record<TableId, Standing[]> = {
+    A: computeStandings(rosters.A, fixtures.A),
+    B: computeStandings(rosters.B, fixtures.B),
+  };
+  const groupsComplete = groupComplete(fixtures.A) && groupComplete(fixtures.B);
+  const seed = (s: Standing[], i: number) => (groupsComplete ? s[i]?.teamId ?? null : null);
   const playoffs = derivePlayoffs(
-    computeStandings(rosters.A, fixtures.A),
-    computeStandings(rosters.B, fixtures.B),
+    seed(standings.A, 0),
+    seed(standings.B, 0),
+    seed(standings.A, 1),
+    seed(standings.B, 1),
     state.results,
     scores,
   );
@@ -238,7 +260,7 @@ export function buildTournament(teamsFromDb: Team[], state: TournamentState, nam
 
   const tables: GroupTable[] = (['A', 'B'] as TableId[]).map((tid) => ({
     table: tid,
-    standings: computeStandings(rosters[tid], fixtures[tid]),
+    standings: standings[tid],
     matches: fixtures[tid],
   }));
 
@@ -256,7 +278,8 @@ export function buildTournament(teamsFromDb: Team[], state: TournamentState, nam
     playoffs,
     schedule,
     published: rosters.A.length >= 1 && rosters.B.length >= 1,
-    playoffsReady: rosters.A.length >= 2 && rosters.B.length >= 2,
+    // playoffs only "ready" once both groups finish (and have >= 2 teams each)
+    playoffsReady: groupsComplete && rosters.A.length >= 2 && rosters.B.length >= 2,
     champion: playoffs.champion,
   };
 }

@@ -64,7 +64,8 @@ export default function StandingsTable({
         </tbody>
       </table>
       <p className="mt-1 px-1 text-[11px] text-brand-ink/50">
-        Top 2 (highlighted) advance to the playoffs. Ties broken by point difference (PD).
+        Top 2 advance to the playoffs (highlighted once the group is complete). Ties broken by point
+        difference (PD).
       </p>
     </div>
   );
