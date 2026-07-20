@@ -283,8 +283,17 @@ const LetIllustration: FC = () => {
           animate={reduce ? {} : { rotate: [0, 360] }}
           transition={reduce ? {} : { duration: 0.9, ease: [0.16, 1, 0.3, 1], repeat: Infinity, repeatDelay: 1.6 }}
         >
-          <path d="M152 80 A12 12 0 1 1 140 92" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" />
-          <path d="M147 79 L152.5 80 L151 85.5" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <g
+            transform="translate(140 80)"
+            fill="none"
+            stroke={GOLD}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="1 4 1 10 7 10" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+          </g>
         </motion.g>
         <text x="100" y="150" textAnchor="middle" fontSize="10" fontWeight="800" fill={NAVY}>
           LET — REPLAY THE RALLY
