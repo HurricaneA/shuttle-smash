@@ -69,7 +69,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       await tx.team.deleteMany({ where: { id: { notIn: [...idsA, ...idsB] } } });
 
-      const state = { tableA: idsA, tableB: idsB, results: {}, scores: {} };
+      // schedule left empty -> buildTournament re-defaults it for the new rosters
+      const state = { tableA: idsA, tableB: idsB, results: {}, scores: {}, schedule: [] };
       await tx.tournament.upsert({
         where: { id: 'main' },
         update: { state: state as unknown as object },

@@ -1,6 +1,6 @@
 // Typed fetch wrappers around the same-origin /api functions.
 
-import type { Tournament } from '../types/bracket';
+import type { ScheduleRow, Tournament } from '../types/bracket';
 
 export interface TeamInput {
   id?: string;
@@ -83,5 +83,11 @@ export const api = {
     request<{ bracket: Tournament }>('reset', {
       method: 'POST',
       body: JSON.stringify({ clearTeams }),
+    }).then((r) => r.bracket),
+
+  saveSchedule: (schedule: ScheduleRow[]) =>
+    request<{ bracket: Tournament }>('schedule', {
+      method: 'PATCH',
+      body: JSON.stringify({ schedule }),
     }).then((r) => r.bracket),
 };

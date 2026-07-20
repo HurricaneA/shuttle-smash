@@ -19,7 +19,7 @@ export default function StandingsTable({
             <th className="px-2 py-2 text-center font-bold" title="Won">W</th>
             <th className="px-2 py-2 text-center font-bold" title="Lost">L</th>
             <th className="px-2 py-2 text-center font-bold" title="Points">Pts</th>
-            <th className="px-2 py-2 text-center font-bold" title="Point difference (winning margins)">PD</th>
+            <th className="px-2 py-2 text-center font-bold" title="Point difference (points won − points lost)">PD</th>
           </tr>
         </thead>
         <tbody>

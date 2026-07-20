@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import type { Team, Tournament } from '../../types/bracket';
+import type { ScheduleRow, Team, Tournament } from '../../types/bracket';
 import { api } from '../../api/client';
 import GroupSection from '../tournament/GroupSection';
-import PlayoffBracket from '../tournament/PlayoffBracket';
+import Timetable from '../tournament/Timetable';
 
 export default function ResultsEditor({
   tournament,
@@ -34,13 +34,22 @@ export default function ResultsEditor({
 
   const pick = (matchId: string, teamId: string) => {
     const m = allMatches.find((x) => x.id === matchId);
-    const clearing = m?.winner === teamId; // click the current winner to undo
+    const clearing = m?.winner === teamId;
     run(matchId, () => (clearing ? api.clearResult(matchId) : api.setResult(matchId, teamId)));
   };
   const score = (matchId: string, a: number, b: number) => run(matchId, () => api.setScore(matchId, a, b));
 
+  const saveSchedule = async (rows: ScheduleRow[]) => {
+    try {
+      onChange(await api.saveSchedule(rows));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save schedule.');
+      throw e;
+    }
+  };
+
   const resetResults = async () => {
-    if (!window.confirm('Clear all match results and scores? Teams and tables are kept.')) return;
+    if (!window.confirm('Clear all match results and scores? Teams, tables and schedule are kept.')) return;
     try {
       onChange(await api.reset(false));
     } catch (e) {
@@ -52,39 +61,29 @@ export default function ResultsEditor({
     <div className="space-y-6">
       <p className="text-sm text-brand-ink/60">
         Enter each match score and hit <strong>Save</strong> — the higher score wins, standings and
-        the playoffs update automatically. Or tap a team to set the winner without a score.
+        the playoffs update automatically. Reorder or re-time matches by dragging rows, then{' '}
+        <strong>Save schedule</strong>.
       </p>
 
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {tournament.tables.map((table) => (
-          <GroupSection
-            key={table.table}
-            table={table}
-            teams={teamMap}
-            editable
-            busyMatchId={busyMatchId}
-            onPick={pick}
-            onScore={score}
-          />
+          <GroupSection key={table.table} table={table} teams={teamMap} />
         ))}
       </div>
 
       <div className="card">
-        <h3 className="text-xl font-bold text-brand-navy">Playoffs</h3>
-        <p className="mt-1 text-sm text-brand-ink/60">
-          Qualifier 1 (A1 vs B1) + Eliminator (A2 vs B2) → Qualifier 2 → Final.
-        </p>
+        <h3 className="text-xl font-bold text-brand-navy">Schedule &amp; Results</h3>
         <div className="mt-4">
-          <PlayoffBracket
-            playoffs={tournament.playoffs}
+          <Timetable
+            tournament={tournament}
             teams={teamMap}
-            ready={tournament.playoffsReady}
             editable
             busyMatchId={busyMatchId}
             onPick={pick}
             onScore={score}
+            onSaveSchedule={saveSchedule}
           />
         </div>
       </div>

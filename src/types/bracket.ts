@@ -22,15 +22,26 @@ export interface Team {
 export interface Match {
   id: string;
   kind: 'group' | 'playoff';
-  label: string; // "Qualifier 1", "Final", or "" for a group fixture
-  sublabel: string | null; // "Winner → Final · Loser out", or "Day 2"
+  label: string; // "Qualifier 1", "Final", or "Match 03" for a group fixture
+  sublabel: string | null; // "Winner → Final · Loser out"
   tableId: TableId | null; // group fixtures only
-  round: number | null; // group round / day
+  matchNo: number | null; // group running order (1..N), set from the schedule
+  time: string | null; // scheduled start time, e.g. "10:00 am"
   a: string | null; // teamId in slot a (or null = TBD)
   b: string | null;
   winner: string | null;
   scoreA: number | null;
   scoreB: number | null;
+}
+
+/** One slot in the day's running order (editable + drag-to-reorder in admin). */
+export interface ScheduleRow {
+  id: string; // stable row id (for drag-drop keys)
+  kind: 'group' | 'break' | 'playoff';
+  time: string; // "10:00 am"
+  pairIndex?: number; // group rows: which fixture pair (index into the fixture order)
+  label?: string; // break / playoff label
+  playoffIds?: string[]; // playoff rows: the match ids at this slot (e.g. ["q1","elim"])
 }
 
 /** One row of a group table's standings. */
@@ -62,6 +73,7 @@ export interface Tournament {
   teams: Team[];
   tables: GroupTable[]; // [A, B]
   playoffs: Playoffs;
+  schedule: ScheduleRow[]; // the day's running order (with resolved times)
   published: boolean; // both tables have at least one team
   playoffsReady: boolean; // both tables have >= 2 teams
   champion: string | null;
@@ -73,6 +85,7 @@ export interface TournamentState {
   tableB: string[]; // ordered team ids in Table B
   results: Record<string, string>; // matchId -> winning teamId
   scores: Record<string, { a: number; b: number }>; // matchId -> slot a/b scores
+  schedule: ScheduleRow[]; // running order + times (empty = auto-default)
 }
 
 /** Team-count guardrails per table (round-robin works for any size in range). */

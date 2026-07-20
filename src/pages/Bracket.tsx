@@ -1,6 +1,7 @@
 import { useTournament } from '../hooks/useBracket';
 import GroupSection from '../components/tournament/GroupSection';
 import PlayoffBracket from '../components/tournament/PlayoffBracket';
+import Timetable from '../components/tournament/Timetable';
 import type { Team } from '../types/bracket';
 
 export default function Bracket() {
@@ -15,7 +16,7 @@ export default function Bracket() {
     <>
       <section className="brand-gradient text-white">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-10 text-center">
-          <h1 className="text-4xl font-extrabold text-white sm:text-5xl">Live Standings &amp; Bracket</h1>
+          <h1 className="text-4xl font-extrabold text-white sm:text-5xl">Standings, Schedule &amp; Bracket</h1>
           <p className="text-white/80">
             Two groups · round-robin · Top 4 playoffs · updates automatically
           </p>
@@ -40,7 +41,8 @@ export default function Bracket() {
             <p className="text-4xl">🏸</p>
             <h2 className="mt-3 text-2xl font-bold text-brand-navy">Not published yet</h2>
             <p className="mt-2 text-sm text-brand-ink/70">
-              The tables and fixtures will appear here once the organizing committee sets the teams.
+              The tables, schedule and fixtures will appear here once the organizing committee sets
+              the teams.
             </p>
           </div>
         )}
@@ -85,6 +87,14 @@ export default function Bracket() {
                   teams={teamMap}
                   ready={tournament.playoffsReady}
                 />
+              </div>
+            </div>
+
+            <div className="mt-12">
+              <h2 className="text-center text-3xl font-extrabold text-brand-navy">Match Schedule</h2>
+              <div className="mx-auto mt-2 h-1 w-24 rounded bg-brand-gold" />
+              <div className="mt-8">
+                <Timetable tournament={tournament} teams={teamMap} />
               </div>
             </div>
           </>

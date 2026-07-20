@@ -14,7 +14,7 @@ export const event = {
   closing: 'Come, Play, Compete & Create Memories!',
   facts: [
     { label: 'Date', value: '2026' },
-    { label: 'Time', value: '9:00 AM – 5:00 PM' },
+    { label: 'Time', value: '9:00 AM – 6:00 PM' },
     { label: 'Venue', value: 'Sigma Badminton Court, Rathmalana' },
     { label: 'Format', value: 'Doubles · 2 groups · Top 4' },
     { label: 'Players per team', value: 'Two' },

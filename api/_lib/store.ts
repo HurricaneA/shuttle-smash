@@ -24,6 +24,7 @@ export function readState(raw: unknown): TournamentState {
     tableB: Array.isArray(s.tableB) ? s.tableB : [],
     results: s.results && typeof s.results === 'object' ? s.results : {},
     scores: s.scores && typeof s.scores === 'object' ? s.scores : {},
+    schedule: Array.isArray(s.schedule) ? s.schedule : [],
   };
 }
 
